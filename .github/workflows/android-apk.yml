@@ -1,0 +1,30 @@
+name: Build NEON STRIKE APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.3.0
+
+      - name: Export Android APK
+        run: |
+          mkdir -p build
+          godot --headless --verbose --export-release "Android" build/NEON_STRIKE.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEON_STRIKE-Android
+          path: build/NEON_STRIKE.apk
