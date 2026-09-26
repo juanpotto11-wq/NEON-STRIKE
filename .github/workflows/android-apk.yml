@@ -5,26 +5,47 @@ on:
   push:
     branches: ["main"]
 
+env:
+  GODOT_VERSION: 4.3
+  EXPORT_NAME: NEON_STRIKE
+
 jobs:
   android:
-    runs-on: ubuntu-latest
+    name: Android APK
+    runs-on: ubuntu-24.04
+
+    container:
+      image: barichello/godot-ci:4.3
 
     steps:
-      - name: Checkout
+      - name: Descargar proyecto
         uses: actions/checkout@v4
-
-      - name: Setup Godot
-        uses: chickensoft-games/setup-godot@v2
         with:
-          version: 4.3.0
+          lfs: true
 
-      - name: Export Android APK
+      - name: Preparar Godot
         run: |
-          mkdir -p build
-          godot --headless --verbose --export-release "Android" build/NEON_STRIKE.apk
+          mkdir -p ~/.local/share/godot/export_templates/
+          mkdir -p ~/.config/
+          mv /root/.config/godot ~/.config/godot
+          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
 
-      - name: Upload APK
+      - name: Comprobar proyecto
+        run: |
+          godot --version
+          echo "Contenido del proyecto:"
+          ls -la
+          echo "Export presets:"
+          cat export_presets.cfg
+
+      - name: Exportar APK
+        run: |
+          mkdir -p build/android
+          godot --headless --verbose --export-release "Android" "build/android/${EXPORT_NAME}.apk"
+
+      - name: Subir APK
         uses: actions/upload-artifact@v4
         with:
           name: NEON_STRIKE-Android
-          path: build/NEON_STRIKE.apk
+          path: build/android/NEON_STRIKE.apk
+          if-no-files-found: error
